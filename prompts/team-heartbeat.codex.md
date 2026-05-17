@@ -32,11 +32,11 @@ You are a fresh unattended Codex automation session. Load all state from disk be
 
 1. If `<runtime_dir>\PAUSE` exists, exit silently.
 2. If `<runtime_dir>\LOCK` exists:
-   - Read its mtime. If less than 60 minutes ago, exit silently.
-   - If the lock contains a `platform` field different from `"codex"`, log a cross-platform conflict and exit silently.
-   - Else treat it as stale and overwrite it with `{pid:<yours>, started_at:<ISO>, automation:"team-heartbeat", platform:"codex", hostname:<machine>}`.
+   - Read its mtime and parse the lock JSON if possible.
+   - If mtime is less than 60 minutes ago, exit silently. If the lock contains a `platform` field different from `"codex"`, log a cross-platform conflict before exiting.
+   - If mtime is 60+ minutes ago, treat it as stale regardless of platform and overwrite it with `{pid:<yours>, started_at:<ISO>, automation:"team-heartbeat", platform:"codex", hostname:<machine>}`.
 3. If LOCK is absent, create it with the same payload.
-4. Best-effort finally: always remove `<runtime_dir>\LOCK` before exiting. If a fatal error prevents cleanup, the stale-lock rule above is the recovery path.
+4. Best-effort finally: remove `<runtime_dir>\LOCK` before exiting only if this run created or overwrote it. If a fatal error prevents cleanup, the stale-lock rule above is the recovery path.
 
 ## STEP 2  Load and protect state
 
@@ -83,6 +83,7 @@ All work must obey:
 - Prefer small commits with clear conventional messages.
 - Work on `task.branch_metadata.branch`. If missing, create `team/<task_id>-<slug>` from `<base_ref>` only after verifying the working tree is clean.
 - Push task branches only to `<remote>`; never push directly to `<base_branch>`, `main`, or `master`.
+- Update `task.last_platform` to `"codex"` when advancing any task.
 
 ### Branch metadata
 
@@ -121,6 +122,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
 - Confirm the task has at least 3 objective DoD checks.
 - If it lacks DoD, refine it in place or set `state = "blocked"` with `next_action = "planner produced task without objective DoD"`.
 - If valid, set `state = "triaged"`.
+- Set `task.last_platform = "codex"`.
 
 `triaged`:
 - Inline architect role.
@@ -133,6 +135,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
   - test/eval approach
   - risks and rollback
 - Set `task.gstack_artifacts.plan = "<runtime_dir>/scratch/<task_id>/plan.md"` if the field exists.
+- Set `task.last_platform = "codex"`.
 - Set state to `planned`.
 
 `planned`:
@@ -142,6 +145,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
 - After creating or checking out the task branch, update `branch_metadata.base_sha`, `branch_metadata.merge_base`, `branch_metadata.head_sha`, and `branch_metadata.branch`.
 - After every commit, update `branch_metadata.last_commit_sha` and `branch_metadata.head_sha`.
 - Write `<runtime_dir>\scratch\<task_id>\engineer.md` with first line `PROGRESSED:<Ncommits>`.
+- Set `task.last_platform = "codex"`.
 - Set state to `in-progress`.
 
 `in-progress`:
@@ -149,6 +153,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
 - If `pct < 50%`, continue engineering only on failed DoD items.
 - If `pct >= 50%`, set `state = "review-ready"` and `quality_gates.review = "pending"`.
 - If `task.attempts >= 5` and `pct < 80%`, set state to `parked`.
+- Set `task.last_platform = "codex"`.
 
 `review-ready`:
 - Run a gstack-style review gate. Do not just say "looks good".
@@ -165,6 +170,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
 - If `APPROVED`, set `quality_gates.review = "pass"` and `state = "qa-ready"`.
 - If `NEEDS_CHANGES`, set `quality_gates.review = "fail"` and `state = "in-progress"` with `next_action` listing required fixes.
 - If `BLOCKED`, set `quality_gates.review = "blocked"` and `state = "blocked"`.
+- Set `task.last_platform = "codex"`.
 
 `qa-ready`:
 - Run a gstack-style QA/eval gate.
@@ -179,6 +185,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
 - Set `task.gstack_artifacts.qa_report = "<runtime_dir>/scratch/<task_id>/gstack-qa.md"` if the field exists.
 - If `SMOKE_OK` or `NOT_APPLICABLE`, set `quality_gates.qa = "pass"` and `state = "pr-ready"`.
 - If `SMOKE_FAIL`, set `quality_gates.qa = "fail"` and `state = "in-progress"` with `next_action` listing fixes.
+- Set `task.last_platform = "codex"`.
 
 `pr-ready`:
 - Re-run `verify_dod`; all objective DoD must pass.
@@ -200,6 +207,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
   5. Store PR URL in `task.pr`.
   6. Extract the PR number and set `branch_metadata.pr_head_sha` from `gh pr view <num> --repo <github_repo> --json headRefOid --jq .headRefOid`.
   7. Set state to `pr-open`.
+- Set `task.last_platform = "codex"`.
 
 `pr-open`:
 - Extract PR number from `task.pr`.
@@ -212,6 +220,7 @@ Keep branch metadata written back to `<runtime_dir>\board.json` whenever branch 
 - If still open and all checks are `SUCCESS`, set state to `awaiting-review`.
 - If checks are pending, set `next_action = "wait for CI"`.
 - If any check failed, increment attempts and set state to `blocked` after 3 failed CI attempts.
+- Set `task.last_platform = "codex"`.
 
 ### verify_dod
 
@@ -247,7 +256,5 @@ Then:
 - Never modify outside configured `allowed_paths` except runtime state under `runtime_dir`.
 - Never modify files listed in `board.tasks[*].do_not_touch`.
 ```
-
-
 
 

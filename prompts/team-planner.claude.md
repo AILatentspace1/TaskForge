@@ -36,11 +36,17 @@ This is a Claude Code scheduled automation. You have access to Claude Code tools
 ## STEP 1  Load state
 
 1. If `<runtime_dir>/PAUSE` exists, exit silently.
-2. Read `<runtime_dir>/goals/current.md`. If missing, create no tasks and write a planner log saying `NO_GOAL`.
-3. Read the planner contract from `prompt_source` config value + relative path `docs/planner-contract.md`. If `prompt_source` is not set, fall back to reading `docs/planner-contract.md` from the TaskForge installation directory.
-4. Read `<runtime_dir>/board.json`. If missing, create:
+2. If `<runtime_dir>/LOCK` exists:
+   - Read its mtime and parse the lock JSON if possible.
+   - If mtime is less than 60 minutes ago, exit silently. If the lock contains a `platform` field different from `"claude"`, log a cross-platform conflict before exiting.
+   - If mtime is 60+ minutes ago, treat it as stale regardless of platform and overwrite it with `{"pid": <pid>, "started_at": "<ISO>", "automation": "team-planner", "platform": "claude", "hostname": "<hostname>"}`.
+3. If LOCK is absent, create it with the same payload.
+4. Best-effort finally: remove `<runtime_dir>/LOCK` before exiting only if this run created or overwrote it. If a fatal error prevents cleanup, the stale-lock rule above is the recovery path.
+5. Read `<runtime_dir>/goals/current.md`. If missing, create no tasks and write a planner log saying `NO_GOAL`.
+6. Read the planner contract from `system_repo/docs/planner-contract.md` if `system_repo` is configured. If only `prompt_source` is configured, read `../docs/planner-contract.md` relative to `prompt_source`. Do not hardcode a TaskForge installation path.
+7. Read `<runtime_dir>/board.json`. If missing, create:
    `{"version":3, "updated_at":"<now>", "goals":[], "tasks":[], "branch_metadata_schema":{"base_remote":"<remote>","base_branch":"<base_branch>","branch":null,"merge_base":null,"base_sha":null,"head_sha":null,"last_commit_sha":null,"last_pushed_sha":null,"pr_head_sha":null,"updated_at":null}, "locks":{}, "stats":{"ignored_low_priority_signals":0,"total_planner_runs":0,"total_candidates_seen":0,"total_tasks_promoted":0,"total_heartbeats":0,"total_prs_opened":0}}`.
-5. Read recent context if present:
+8. Read recent context if present:
    - `<runtime_dir>/PLAN.md`
    - newest 5 `<runtime_dir>/daily/*.md`
    - newest 5 `<runtime_dir>/log/*.jsonl`
@@ -164,11 +170,13 @@ Use the next numeric id after existing `T-*` ids. Preserve existing tasks.
 2. Increment `board.stats.total_candidates_seen` by candidates generated this run.
 3. Increment `board.stats.total_tasks_promoted` by tasks promoted this run.
 4. Set `board.updated_at` to current Asia/Shanghai ISO timestamp.
-5. Atomic write board: write `<runtime_dir>/board.json.tmp`, then `mv <runtime_dir>/board.json.tmp <runtime_dir>/board.json`.
-6. Append one JSONL event to `<runtime_dir>/log/<YYYY-MM-DD>.jsonl`:
+5. Re-read `<runtime_dir>/board.json` immediately before writing. If another run added tasks while this planner was working, merge only this run's new task records by fingerprint/id, recompute next available `T-*` ids if needed, preserve all existing task changes, then update stats.
+6. Atomic write board: write `<runtime_dir>/board.json.tmp`, then `mv <runtime_dir>/board.json.tmp <runtime_dir>/board.json`.
+7. Append one JSONL event to `<runtime_dir>/log/<YYYY-MM-DD>.jsonl`:
    `{"ts":"<ISO>", "action":"planner", "platform":"claude", "goal_id":"...", "candidates":<n>, "promoted":<n>, "summary":"..."}`.
-7. Output one-line summary:
+8. Output one-line summary:
    `[planner] goal=<goal_id> candidates=<n> promoted=<n> active=<n>`.
+9. Remove `<runtime_dir>/LOCK`.
 
 ## Hard rules
 

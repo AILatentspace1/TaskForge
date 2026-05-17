@@ -30,11 +30,11 @@ You are a fresh unattended Claude Code automation session. Load all state from d
 
 1. If `<runtime_dir>/PAUSE` exists, exit silently.
 2. If `<runtime_dir>/LOCK` exists:
-   - Read its mtime. If less than 60 minutes ago, exit silently.
-   - Check the `platform` field in the lock. If locked by a different platform and lock is less than 60 minutes old, exit silently with a log message.
-   - Else treat it as stale and overwrite it with `{"pid": "<pid>", "started_at": "<ISO>", "automation": "team-heartbeat", "platform": "claude", "hostname": "<hostname>"}`.
+   - Read its mtime and parse the lock JSON if possible.
+   - If mtime is less than 60 minutes ago, exit silently. If the lock contains a `platform` field different from `"claude"`, log a cross-platform conflict before exiting.
+   - If mtime is 60+ minutes ago, treat it as stale regardless of platform and overwrite it with `{"pid": <pid>, "started_at": "<ISO>", "automation": "team-heartbeat", "platform": "claude", "hostname": "<hostname>"}`.
 3. If LOCK is absent, create it with the same payload.
-4. Best-effort finally: always remove `<runtime_dir>/LOCK` before exiting. If a fatal error prevents cleanup, the stale-lock rule above is the recovery path.
+4. Best-effort finally: remove `<runtime_dir>/LOCK` before exiting only if this run created or overwrote it. If a fatal error prevents cleanup, the stale-lock rule above is the recovery path.
 
 ## STEP 2  Load and protect state
 
