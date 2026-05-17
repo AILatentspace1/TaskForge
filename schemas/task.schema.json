@@ -68,6 +68,47 @@
     },
     "pr": { "type": ["string", "null"] },
     "blocked_by": { "type": "array", "items": { "type": "string" } },
+    "dependencies": {
+      "type": "object",
+      "description": "显式依赖关系",
+      "properties": {
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "当前任务依赖的任务 ID 列表（这些任务完成后当前任务才能推进）"
+        },
+        "blocks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "当前任务阻塞的任务 ID 列表（当前任务完成后这些任务才能推进）"
+        }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "description": "任务交接状态",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["not_started", "in_progress", "accepted", "rejected"],
+          "description": "交接状态"
+        },
+        "artifact": {
+          "type": "string",
+          "description": "交接产物路径（如文档、API、配置等）"
+        },
+        "to_task": {
+          "type": "string",
+          "description": "交接目标任务 ID"
+        },
+        "note": {
+          "type": "string",
+          "description": "交接说明"
+        }
+      },
+      "additionalProperties": false
+    },
     "dod": { "type": "array", "minItems": 3, "items": { "type": "object" } },
     "dod_results": { "type": "object" },
     "quality_gates": { "type": "object" },

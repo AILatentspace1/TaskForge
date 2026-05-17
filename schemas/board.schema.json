@@ -38,6 +38,37 @@
         "hostname": { "type": "string" }
       }
     },
+    "dependencies": {
+      "type": "array",
+      "description": "任务间依赖关系图",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "type"],
+        "properties": {
+          "from": { "type": "string", "description": "源任务 ID" },
+          "to": { "type": "string", "description": "目标任务 ID" },
+          "type": { "type": "string", "enum": ["blocking", "optional"], "description": "依赖类型：blocking 表示硬阻塞，optional 表示软依赖" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "handoffs": {
+      "type": "array",
+      "description": "跨任务交接事件记录",
+      "items": {
+        "type": "object",
+        "required": ["from_task", "to_task", "artifact", "status", "at"],
+        "properties": {
+          "from_task": { "type": "string", "description": "交接源任务 ID" },
+          "to_task": { "type": "string", "description": "交接目标任务 ID" },
+          "artifact": { "type": "string", "description": "交接产物路径" },
+          "status": { "type": "string", "enum": ["pending", "in_progress", "accepted", "rejected"], "description": "交接状态" },
+          "at": { "type": "string", "description": "交接时间 ISO 8601" },
+          "note": { "type": "string", "description": "交接备注" }
+        },
+        "additionalProperties": false
+      }
+    },
     "stats": { "type": "object" }
   },
   "additionalProperties": true
