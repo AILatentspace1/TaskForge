@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "project_name": "example-project",
+  "target_repo": "E:\\workspace\\example-project",
+  "runtime_dir": ".team",
+  "remote": "origin",
+  "base_branch": "main",
+  "github_repo": "owner/example-project",
+  "north_star": "Describe the durable project mission that automation must stay inside.",
+  "allowed_paths": [
+    "src/**",
+    "docs/**",
+    "tests/**"
+  ],
+  "prompt_source": "E:\\workspace\\TaskForge\\prompts",
+  "automations": {
+    "planner": "team-planner.codex.md",
+    "heartbeat": "team-heartbeat.codex.md",
+    "retro": "team-retro.codex.md"
+  }
+}

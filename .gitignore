@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+
+# TaskForge is the versioned system definition.
+# Per-project runtime state stays in the target project's .team/ directory.
+.team/

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://taskforge.local/schemas/task.schema.json",
+  "title": "TaskForge Task",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "goal_id",
+    "skill",
+    "state",
+    "fingerprint",
+    "priority",
+    "dod",
+    "quality_gates",
+    "branch_metadata",
+    "next_action"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^T-[0-9]{4,}$" },
+    "title": { "type": "string", "minLength": 1 },
+    "goal_id": { "type": "string", "minLength": 1 },
+    "skill": { "type": "string", "minLength": 1 },
+    "state": {
+      "type": "string",
+      "enum": [
+        "inbox",
+        "triaged",
+        "planned",
+        "in-progress",
+        "review-ready",
+        "qa-ready",
+        "pr-ready",
+        "pr-open",
+        "awaiting-review",
+        "merged",
+        "closed",
+        "blocked",
+        "parked"
+      ]
+    },
+    "source": { "type": "string" },
+    "fingerprint": { "type": "string", "minLength": 8 },
+    "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3", "P4"] },
+    "why": { "type": "string" },
+    "key_files": { "type": "array", "items": { "type": "string" } },
+    "created_at": { "type": "string" },
+    "last_seen_at": { "type": "string" },
+    "last_touched_at": { "type": "string" },
+    "attempts": { "type": "integer", "minimum": 0 },
+    "do_not_touch": { "type": "array", "items": { "type": "string" } },
+    "branch_metadata": {
+      "type": "object",
+      "required": ["base_remote", "base_branch", "branch"],
+      "properties": {
+        "base_remote": { "type": "string" },
+        "base_branch": { "type": "string" },
+        "branch": { "type": ["string", "null"] },
+        "merge_base": { "type": ["string", "null"] },
+        "base_sha": { "type": ["string", "null"] },
+        "head_sha": { "type": ["string", "null"] },
+        "last_commit_sha": { "type": ["string", "null"] },
+        "last_pushed_sha": { "type": ["string", "null"] },
+        "pr_head_sha": { "type": ["string", "null"] },
+        "updated_at": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "pr": { "type": ["string", "null"] },
+    "blocked_by": { "type": "array", "items": { "type": "string" } },
+    "dod": { "type": "array", "minItems": 3, "items": { "type": "object" } },
+    "dod_results": { "type": "object" },
+    "quality_gates": { "type": "object" },
+    "gstack_artifacts": { "type": "object" },
+    "next_action": { "type": "string" }
+  },
+  "additionalProperties": true,
+  "not": {
+    "required": ["branch"]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://taskforge.local/schemas/board.schema.json",
+  "title": "TaskForge Board",
+  "type": "object",
+  "required": ["version", "updated_at", "goals", "tasks", "stats"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "updated_at": { "type": "string" },
+    "goals": { "type": "array", "items": { "type": "object" } },
+    "tasks": {
+      "type": "array",
+      "items": { "$ref": "./task.schema.json" }
+    },
+    "branch_metadata_schema": {
+      "type": "object",
+      "properties": {
+        "base_remote": { "type": "string" },
+        "base_branch": { "type": "string" },
+        "branch": { "type": ["string", "null"] },
+        "merge_base": { "type": ["string", "null"] },
+        "base_sha": { "type": ["string", "null"] },
+        "head_sha": { "type": ["string", "null"] },
+        "last_commit_sha": { "type": ["string", "null"] },
+        "last_pushed_sha": { "type": ["string", "null"] },
+        "pr_head_sha": { "type": ["string", "null"] },
+        "updated_at": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "locks": { "type": "object" },
+    "stats": { "type": "object" }
+  },
+  "additionalProperties": true
+}
