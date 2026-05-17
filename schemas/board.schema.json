@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["version", "updated_at", "goals", "tasks", "stats"],
   "properties": {
-    "version": { "type": "integer", "minimum": 1 },
+    "version": { "type": "integer", "minimum": 1, "description": "Board schema version. v3 adds platform fields (created_by_platform, last_platform) and enhanced lock format." },
     "updated_at": { "type": "string" },
     "goals": { "type": "array", "items": { "type": "object" } },
     "tasks": {
@@ -28,7 +28,16 @@
       },
       "additionalProperties": false
     },
-    "locks": { "type": "object" },
+    "locks": {
+      "type": "object",
+      "properties": {
+        "pid": { "type": "integer" },
+        "started_at": { "type": "string" },
+        "automation": { "type": "string" },
+        "platform": { "type": "string", "enum": ["codex", "claude"] },
+        "hostname": { "type": "string" }
+      }
+    },
     "stats": { "type": "object" }
   },
   "additionalProperties": true

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "project_name": "example-project",
-  "target_repo": "E:\\workspace\\example-project",
+  "target_repo": "/path/to/example-project",
   "runtime_dir": ".team",
   "remote": "origin",
   "base_branch": "main",
@@ -12,10 +12,19 @@
     "docs/**",
     "tests/**"
   ],
-  "prompt_source": "E:\\workspace\\TaskForge\\prompts",
+  "prompt_source": "/path/to/TaskForge/prompts",
+  "platforms": ["codex", "claude"],
+  "default_platform": "claude",
   "automations": {
-    "planner": "team-planner.codex.md",
-    "heartbeat": "team-heartbeat.codex.md",
-    "retro": "team-retro.codex.md"
+    "codex": {
+      "planner": "team-planner.codex.md",
+      "heartbeat": "team-heartbeat.codex.md",
+      "retro": "team-retro.codex.md"
+    },
+    "claude": {
+      "planner": "team-planner.claude.md",
+      "heartbeat": "team-heartbeat.claude.md",
+      "retro": "team-retro.claude.md"
+    }
   }
 }

@@ -52,3 +52,42 @@ field. The current shape is:
 
 The board stores facts. The automation decides how to use the configured git
 remote in the target repository.
+
+## Platform Support
+
+TaskForge supports two automation platforms:
+
+- **Codex** (Windows): uses PowerShell, scheduled via Codex cron.
+- **Claude Code** (macOS/Linux): uses bash/zsh, scheduled via `CronCreate`.
+
+Both platforms operate on the same runtime state (`board.json`, logs, scratch)
+and can run concurrently on the same project.
+
+### Platform Fields
+
+Each task carries platform fields at the root level:
+
+- `created_by_platform`: which platform created the task (`"codex"` or `"claude"`).
+- `last_platform`: which platform last modified the task.
+
+These fields are separate from `branch_metadata` which tracks git branch state.
+
+### Concurrent Operation
+
+Lock files include a `platform` field and `hostname`:
+
+```json
+{
+  "pid": 12345,
+  "started_at": "2026-05-17T12:00:00Z",
+  "automation": "team-heartbeat",
+  "platform": "claude",
+  "hostname": "my-machine"
+}
+```
+
+When an automation finds a lock from a different platform that is less than 60
+minutes old, it exits silently to avoid conflicts. Stale locks (older than 60
+minutes) are overwritten regardless of platform.
+
+Log entries in `log/*.jsonl` also include a `platform` field for audit tracing.

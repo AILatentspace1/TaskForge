@@ -72,7 +72,9 @@
     "dod_results": { "type": "object" },
     "quality_gates": { "type": "object" },
     "gstack_artifacts": { "type": "object" },
-    "next_action": { "type": "string" }
+    "next_action": { "type": "string" },
+    "created_by_platform": { "type": "string", "enum": ["codex", "claude"] },
+    "last_platform": { "type": "string", "enum": ["codex", "claude"] }
   },
   "additionalProperties": true,
   "not": {

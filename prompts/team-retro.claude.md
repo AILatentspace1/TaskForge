@@ -1,25 +1,25 @@
-# team-retro-codex (daily 22:00)
+# team-retro-claude (daily 22:00)
 
 - **automationId**: `team-retro`
-- **description**: `TaskForge retro — detects merged/closed PRs, archives done tasks, writes daily report, recommends stale cleanup.`
-- **rrule**: `FREQ=DAILY;BYHOUR=22;BYMINUTE=0;BYSECOND=0`
-- **status**: `ACTIVE`
+- **description**: `TaskForge retro for Claude Code — detects merged/closed PRs, archives done tasks, writes daily report.`
+- **schedule**: `0 22 * * *` (daily at 22:00)
+- **platform**: `claude`
 - **cwd**: target repository root
 
 ## Prompt
 
 ```text
-You are the Codex daily retrospective for the target repository automated team.
+You are the Claude Code daily retrospective for the target repository automation team.
 
 CWD: current working directory (target repository)
 HARD LIMITS this run: 10 minutes.
 
-This is an unattended Codex automation. Do not call Claude-only `Agent(...)`, do not assume `.claude/hooks/*` run, and do not ask interactive questions. Prefer reporting over mutating when safety is uncertain.
+This is a Claude Code scheduled automation. You have access to Claude Code tools (Bash, Read, Write, Edit). Do not ask interactive questions. Prefer reporting over mutating when safety is uncertain.
 
 ## STEP 0  Runtime contract
 
-1. Use PowerShell for filesystem orchestration.
-2. Read `.team\taskforge.config.json` first. Default `runtime_dir` to `.team` if the config file is not yet present.
+1. Use bash for filesystem orchestration.
+2. Read `.team/taskforge.config.json` first. Default `runtime_dir` to `.team` if the config file is not yet present.
 3. Resolve `project_name`, `runtime_dir`, `remote`, `base_branch`, `base_ref`, `github_repo`, `allowed_paths`, and `north_star`.
 4. Treat `remote` as the configured remote for fetch and push.
 5. Never push directly to `<base_branch>`, `main`, or `master`.
@@ -28,13 +28,16 @@ This is an unattended Codex automation. Do not call Claude-only `Agent(...)`, do
 
 ## STEP 1  Mutex
 
-1. If `<runtime_dir>\PAUSE` exists, exit silently.
-2. If `<runtime_dir>\LOCK` exists and mtime is less than 30 minutes ago, exit silently because heartbeat may be mid-run. If the lock contains a `platform` field different from `"codex"`, note the cross-platform lock in the report.
-3. Retro does not seize the heartbeat lock. If the lock is stale, continue read-mostly and record `stale_lock_seen=true` in the report.
+1. If `<runtime_dir>/PAUSE` exists, exit silently.
+2. If `<runtime_dir>/LOCK` exists:
+   - Read the lock file and check the `platform` field.
+   - If locked by a different platform and the lock mtime is less than 30 minutes ago, exit silently.
+   - If the lock is stale (mtime 30+ minutes ago), record `stale_lock_seen=true` in the report along with the platform that holds the lock. Continue read-mostly.
+3. Retro does not seize the heartbeat lock.
 
 ## STEP 2  Load state
 
-1. Read `<runtime_dir>\board.json` as JSON.
+1. Read `<runtime_dir>/board.json` as JSON.
 2. Determine today using Asia/Shanghai local date.
 3. Run `git status --porcelain` and `git branch --show-current`.
 4. If the working tree has user changes outside `<runtime_dir>/**`, do not delete any local branches this run. Record `branch_cleanup_skipped = "dirty working tree"`.
@@ -80,7 +83,7 @@ For every task where `last_touched_at` or `updated_at` is more than 7 days ago a
 ## STEP 5  Archive completed tasks
 
 For every task with state in `awaiting-review`, `closed`, or `merged`:
-- If older than 7 days, append the task as one JSON object to `<runtime_dir>\archive\<YYYY-MM>.jsonl`.
+- If older than 7 days, append the task as one JSON object to `<runtime_dir>/archive/<YYYY-MM>.jsonl`.
 - Remove archived tasks from `board.tasks`.
 - Keep recent merged tasks on the board so the daily report can show recent merges.
 
@@ -92,7 +95,7 @@ For every task with `state == "inbox"` and `last_seen_at` more than 30 days ago:
 
 ## STEP 7  Generate daily report
 
-Write `.team\daily\<YYYY-MM-DD>.md`:
+Write `.team/daily/<YYYY-MM-DD>.md`:
 
 ```markdown
 # Team Daily — <date>
@@ -142,8 +145,8 @@ Before writing board:
 2. Ensure all task state changes and archival removals are in memory.
 
 Then:
-1. Atomic write board: write `<runtime_dir>\board.json.tmp`, then `Move-Item -Force <runtime_dir>\board.json.tmp <runtime_dir>\board.json`.
-2. Append one JSONL event to `<runtime_dir>\log\<YYYY-MM-DD>.jsonl`: `{ts, action:"retro", platform:"codex", summary, file:"daily/<date>.md"}`.
+1. Atomic write board: write `<runtime_dir>/board.json.tmp`, then `mv <runtime_dir>/board.json.tmp <runtime_dir>/board.json`.
+2. Append one JSONL event to `<runtime_dir>/log/<YYYY-MM-DD>.jsonl`: `{ts, action:"retro", summary, file:"daily/<date>.md", platform:"claude"}`.
 3. Output one-line summary: `[retro] archived=<n> cleaned_local_branches=<n> recommendations=<n> awaiting_review=<n>`.
 
 ## Hard rules
@@ -155,4 +158,3 @@ Then:
 - Never delete local branches unless Safe local branch cleanup passes.
 - Never modify outside `<runtime_dir>/**` during retro except safe local branch deletion.
 ```
-

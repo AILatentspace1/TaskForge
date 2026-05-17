@@ -14,8 +14,11 @@ system definitions: prompts, schemas, policies, and docs.
 ```text
 prompts/
   team-planner.codex.md
+  team-planner.claude.md
   team-heartbeat.codex.md
+  team-heartbeat.claude.md
   team-retro.codex.md
+  team-retro.claude.md
 schemas/
   board.schema.json
   task.schema.json
@@ -29,18 +32,32 @@ examples/
 ## Applying TaskForge To A Project
 
 TaskForge is installed once as a reusable system repository, then each target
-project gets its own runtime `.team/` directory and Codex automations.
+project gets its own runtime `.team/` directory and automations.
+
+TaskForge supports two platforms:
+- **Codex** — uses PowerShell, Codex cron automations
+- **Claude Code** — uses bash/zsh, Claude Code CronCreate scheduling
+
+Both platforms can operate on the same project concurrently. Lock files include
+a `platform` field to prevent conflicts.
 
 Assume:
 
 ```text
-TaskForge repo: E:\workspace\TaskForge
-Target repo:    E:\workspace\my-project
+TaskForge repo: /path/to/TaskForge
+Target repo:    /path/to/my-project
 ```
 
 ### 1. Create The Runtime Directory
 
 In the target repo:
+
+```bash
+# macOS / Linux
+mkdir -p .team/{goals,log,daily,scratch,archive,planner,policies}
+```
+
+or on Windows:
 
 ```powershell
 New-Item -ItemType Directory -Force -Path .team\goals,.team\log,.team\daily,.team\scratch,.team\archive,.team\planner,.team\policies
@@ -66,10 +83,10 @@ Example:
 {
   "version": 1,
   "system_name": "TaskForge",
-  "system_repo": "E:\\workspace\\TaskForge",
-  "prompt_source": "E:\\workspace\\TaskForge\\prompts",
-  "runtime_dir": "E:\\workspace\\my-project\\.team",
-  "target_repo": "E:\\workspace\\my-project",
+  "system_repo": "/path/to/TaskForge",
+  "prompt_source": "/path/to/TaskForge/prompts",
+  "runtime_dir": "/path/to/my-project/.team",
+  "target_repo": "/path/to/my-project",
   "project_name": "my-project",
   "remote": "origin",
   "base_branch": "main",
@@ -80,19 +97,23 @@ Example:
     "docs/**",
     "tests/**"
   ],
+  "platforms": ["codex", "claude"],
+  "default_platform": "claude",
   "runtime_state_gitignored": true
 }
 ```
 
 Important fields:
 
-- `prompt_source`: where Codex automations read TaskForge prompts from.
+- `prompt_source`: where automations read TaskForge prompts from.
 - `runtime_dir`: where board/log/scratch state lives in the target repo.
 - `github_repo`: GitHub `owner/repo` used for PR commands.
 - `remote`: git remote used for branches, usually `origin`.
 - `base_branch`: PR base branch, usually `main`.
 - `north_star`: durable mission the automation must stay inside.
 - `allowed_paths`: implementation paths heartbeat is allowed to edit.
+- `platforms`: which platforms are enabled, e.g. `["codex", "claude"]`.
+- `default_platform`: primary platform for new task creation.
 
 ### 3. Add The Current Goal
 
@@ -142,6 +163,8 @@ Not allowed:
 
 ### 4. Register The Three Automations
 
+#### Codex (Windows)
+
 Create three Codex cron automations with the target repo as `cwd`.
 
 Recommended schedules:
@@ -154,11 +177,36 @@ Recommended schedules:
 
 Each automation prompt should be the full fenced text under `## Prompt` from
 the matching TaskForge prompt file. Set the automation `cwd` to the target repo
-root, for example:
+root.
 
-```text
-E:\workspace\my-project
+#### Claude Code (macOS / Linux)
+
+Use Claude Code's `CronCreate` tool to register three scheduled automations.
+Each prompt instructs the agent to read the full prompt file from disk.
+
+Recommended schedules:
+
+| Automation | Cron | Prompt file |
+|---|---:|---|
+| `team-planner` | `5 */6 * * *` | `prompts/team-planner.claude.md` |
+| `team-heartbeat` | `15 */2 * * *` | `prompts/team-heartbeat.claude.md` |
+| `team-retro` | `0 22 * * *` | `prompts/team-retro.claude.md` |
+
+Example for planner:
+
 ```
+CronCreate(
+  cron="5 */6 * * *",
+  prompt="Read <prompt_source>/team-planner.claude.md and execute the prompt section verbatim. CWD is the target repo.",
+  recurring=true,
+  durable=true
+)
+```
+
+**Concurrent operation**: When both Codex and Claude Code operate on the same
+project, they share the same `board.json` and lock file. The lock includes a
+`platform` field to prevent conflicts. If a lock from the other platform is
+active (less than 60 min old), the automation exits silently.
 
 ### 5. First Run Expectations
 
