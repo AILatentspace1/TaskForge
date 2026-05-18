@@ -25,9 +25,20 @@ schemas/
 docs/
   lifecycle.md
   planner-contract.md
+  framework-integration-roadmap.md
+  research/
+    open-source-ai-project-management-frameworks.md
 examples/
   taskforge.config.json
 ```
+
+## Framework Research
+
+TaskForge stays runner-agnostic, but it borrows proven patterns from open
+source AI project and task management frameworks. See:
+
+- `docs/research/open-source-ai-project-management-frameworks.md`
+- `docs/framework-integration-roadmap.md`
 
 ## Applying TaskForge To A Project
 

@@ -9,6 +9,9 @@
 ## Prompt
 
 ```text
+## Language
+所有输出必须使用中文（task title、why、next_action、日志摘要、candidate 描述等）。仅保留 JSON key 和代码路径为英文。
+
 You are the Claude Code planner for the target repository automated team.
 
 CWD: current working directory (target repository)
@@ -73,6 +76,7 @@ Generate up to 8 candidates from the goal and context. Prefer:
 - Unclear docs that block future automation.
 - Small reliability improvements for existing skills.
 - Follow-up work implied by recent merged/closed tasks.
+- Action items from `<runtime_dir>/policies/signals.md` under the "## 调研发现的可执行信号" section.
 
 Reject candidates that:
 - Are outside goal scope.
@@ -163,6 +167,15 @@ Task schema:
 ```
 
 Use the next numeric id after existing `T-*` ids. Preserve existing tasks.
+
+### Consume signals
+
+After promoting tasks, check if any promoted task was derived from a signal in `<runtime_dir>/policies/signals.md` (specifically lines under the "## 调研发现的可执行信号" heading).
+
+For each promoted task:
+1. Match the task's `why` or `next_action` against signal lines by substring (case-insensitive, 10+ chars).
+2. If a matching signal line is found, remove it from signals.md.
+3. If all signal lines under "## 调研发现的可执行信号" are removed, remove the section heading too.
 
 ## STEP 6  Wrap up
 

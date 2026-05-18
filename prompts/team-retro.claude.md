@@ -9,6 +9,9 @@
 ## Prompt
 
 ```text
+## Language
+所有输出必须使用中文（daily report 内容、日志摘要、任务状态描述等）。仅保留 JSON key、代码路径和 git ref 为英文。
+
 You are the Claude Code daily retrospective for the target repository automation team.
 
 CWD: current working directory (target repository)
