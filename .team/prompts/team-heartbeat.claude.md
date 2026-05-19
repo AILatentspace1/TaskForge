@@ -210,7 +210,6 @@ Keep branch metadata written back to `<runtime_dir>/board.json` whenever branch 
   - review report path and verdict;
   - QA/eval report path and verdict;
   - known limitations;
-  - **Follow-up Actions** section: list unchecked `- [ ]` items with short kebab-case IDs describing work left for future tasks (e.g. consuming new schema fields, integrating patterns discovered, prompt improvements). Prefix with `> Merge 后由 heartbeat/planner 提取到 signals.md 生成后续任务`.
   - note that the PR is draft and awaits human review.
 - Set `task.gstack_artifacts.pr_body_evidence = "<runtime_dir>/scratch/<task_id>/pr-body.md"` if the field exists.
 - If all DoD items pass and `git diff <base_ref>..HEAD` is non-empty, open or update a draft PR:
@@ -231,6 +230,7 @@ Keep branch metadata written back to `<runtime_dir>/board.json` whenever branch 
   - Delete the local branch only if all are true: current branch is not that branch, branch name matches `^team/T-`, branch equals `task.branch_metadata.branch`, and `git log <base_ref>..<branch>` has no commits absent from the PR branch.
   - Do not delete any remote branch.
   - Unblock dependents.
+  - **If state is `merged` and `task.skill == "research"`**, run the action item harvest (see STEP 4.5).
 - If still open and all checks are `SUCCESS`, set state to `awaiting-review`.
 - If checks are pending, set `next_action = "wait for CI"`.
 - If any check failed, increment attempts and set state to `blocked` after 3 failed CI attempts.
@@ -245,6 +245,31 @@ For each item in `task.dod`:
 - `scratch-contains`: read `<runtime_dir>/scratch/<task_id>/<file>`, regex match `pattern` against first line or full file as appropriate.
 
 Set `task.dod_results[<id>]` to `pass`, `fail`, or `pending`. Compute `pct = passed / total`.
+
+## STEP 4.5  Harvest action items (on research task merge)
+
+When a research task (`task.skill == "research"`) reaches `merged` state, automatically extract action items from its output documents into `<runtime_dir>/policies/signals.md` so the planner can generate follow-up tasks.
+
+### Procedure
+
+1. Read `<runtime_dir>/policies/signals.md` into memory (current content).
+2. For each file in `task.key_files` that exists on disk and ends with `.md`:
+   - Read the file.
+   - Extract all lines matching the pattern `- [ ]` or `N. [ ]` (markdown checkbox, indicating actionable items).
+   - Strip the leading `- ` or `N. ` and `[ ]` prefix, then trim whitespace to get the action item text.
+3. For each extracted action item:
+   - Check if a similar item already exists in signals.md (case-insensitive substring match of at least 10 characters).
+   - If not a duplicate, prepend `- 调研来源 (${task.id}): <item text>` to the signals list.
+4. Write the updated signals.md back to `<runtime_dir>/policies/signals.md`.
+5. Log a JSONL event: `{"action": "harvested_action_items", "task_id": "<id>", "items_found": <n>, "items_new": <n>, "platform": "claude"}`.
+6. If any new items were added, append to this run's summary output: `harvested=<n> new signals from <task_id>`.
+
+### Constraints
+
+- Only run for `merged` + `research` tasks. Do not harvest from engineering/planning tasks.
+- Do not modify any file outside `runtime_dir` (signals.md is under `runtime_dir/policies/`).
+- Dedup is substring-based (10+ chars) to avoid near-duplicates with different wording.
+- If signals.md does not exist, create it with a `# 信号策略` header before appending.
 
 ## STEP 5  Wrap up
 
