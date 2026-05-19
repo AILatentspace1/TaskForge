@@ -76,6 +76,18 @@ Perform the PM role inline:
 
 If `IDLE` or `RECON_ONLY`, write summary and go to wrap-up. Do not advance a task on `RECON_ONLY`.
 
+## STEP 3.5  Risk scan
+
+After PM triage and before advancing the selected task, scan the board for risk signals:
+
+1. **Stale tasks**: For each non-terminal task, if `last_touched_at` is > 48 hours ago and `state` is not `awaiting-review` or `pr-open`, flag as `stale`. Append to `risk_events`: `{"risk": "stale_task", "task_id": "<id>", "stale_hours": <n>}`.
+2. **Blocked chains**: For each task with `state == "blocked"`, trace `blocked_by` recursively. If chain depth >= 2, flag as `blocked_chain`. Append: `{"risk": "blocked_chain", "root": "<root_task_id>", "chain": ["<id>", ...], "depth": <n>}`.
+3. **Repeated failures**: For each task where `attempts >= 3` and `state` is not terminal, flag as `repeated_failure`. Append: `{"risk": "repeated_failure", "task_id": "<id>", "attempts": <n>}`.
+
+Write `risk_events` array to `<runtime_dir>/scratch/risk-scan.json`. If any risk is found, append a one-line summary to the wrap-up log: `[risk] stale=<n> blocked_chains=<n> failures=<n>`.
+
+Do not block task advancement based on risk scan results. This is observational only — risks are surfaced for human review.
+
 ## STEP 4  Advance selected task
 
 All work must obey:
