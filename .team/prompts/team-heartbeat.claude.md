@@ -59,8 +59,9 @@ Perform the PM role inline:
 
 1. Read `<runtime_dir>/policies/signals.md` if present.
 2. Read current `board.tasks`.
-3. On the first heartbeat where the board has no actionable tasks, populate inbox items from approved signals and return `RECON_ONLY`.
-4. Otherwise select exactly one task using this priority:
+3. Build a dependency lookup: for each non-terminal task, check whether all tasks in its `blocked_by` array are in a terminal state (`merged`, `closed`, `parked`). Tasks with any non-terminal `blocked_by` entry are considered dependency-blocked and must be skipped during selection.
+4. On the first heartbeat where the board has no actionable tasks, populate inbox items from approved signals and return `RECON_ONLY`.
+5. Otherwise select exactly one task using this priority, skipping any dependency-blocked task:
    - Existing `pr-open` tasks needing CI/merge detection.
    - Existing `pr-ready` tasks needing draft PR creation.
    - Existing `qa-ready` tasks needing QA/eval evidence.
@@ -69,7 +70,7 @@ Perform the PM role inline:
    - Existing `planned` tasks.
    - Existing `triaged` tasks.
    - Inbox tasks only after promoting one to `triaged` with a concrete DoD.
-5. Write `<runtime_dir>/scratch/<task_id>/pm.md` with first line one of:
+6. Write `<runtime_dir>/scratch/<task_id>/pm.md` with first line one of:
    - `SELECTED:<task_id>`
    - `IDLE:<reason>`
    - `RECON_ONLY`
@@ -132,6 +133,7 @@ Keep branch metadata written back to `<runtime_dir>/board.json` whenever branch 
 `inbox`:
 - Inline PM role.
 - Confirm the task is still aligned with `<runtime_dir>/goals/current.md` and `north_star`.
+- Verify dependency: check every task id in `task.blocked_by`. If any is not in a terminal state (`merged`, `closed`, `parked`), set `state = "blocked"` with `next_action = "dependency not met: <blocking_task_id> is <state>"`. Skip further advancement this run.
 - Confirm the task has at least 3 objective DoD checks.
 - If it lacks DoD, refine it in place or set `state = "blocked"` with `next_action = "planner produced task without objective DoD"`.
 - If valid, set `state = "triaged"`.
