@@ -246,6 +246,22 @@ For each item in `task.dod`:
 
 Set `task.dod_results[<id>]` to `pass`, `fail`, or `pending`. Compute `pct = passed / total`.
 
+### Guardrail retry loop
+
+After `verify_dod`, if `pct < 100%`:
+
+1. Collect all failed DoD items and their error output into a `guardrail_feedback` object: `{"failed_checks": [{"id": "<id>", "error": "<output>"}], "attempt": <n>}`.
+2. Set `task.next_action` to describe the failures and required fixes.
+3. If `guardrail_feedback.attempt < 2`:
+   - Attempt to fix only the failed items inline.
+   - Re-run `verify_dod` on failed items only.
+   - Increment `guardrail_feedback.attempt`.
+4. If `guardrail_feedback.attempt >= 2` and failures persist:
+   - Record `task.guardrail_attempts = guardrail_feedback.attempt`.
+   - Log: `{"action": "guardrail_exhausted", "task_id": "<id>", "attempts": <n>, "failed": ["<id>", ...], "platform": "claude"}`.
+   - Continue with current pct — do not block task advancement.
+5. If all items pass after retry, set `pct = 100%` and clear `guardrail_feedback`.
+
 ## STEP 5  Wrap up
 
 Before writing board:
