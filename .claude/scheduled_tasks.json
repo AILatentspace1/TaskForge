@@ -3,7 +3,7 @@
     {
       "id": "cb2cb9a5",
       "cron": "5 */6 * * *",
-      "prompt": "Read prompts/team-planner.claude.md and execute the planner automation for this project.",
+      "prompt": "Read .team/prompts/team-planner.claude.md and execute the planner automation for this project.",
       "createdAt": 1779084878187,
       "lastFiredAt": 1779186900408,
       "recurring": true,
@@ -14,7 +14,7 @@
     {
       "id": "cec01b8b",
       "cron": "15 */2 * * *",
-      "prompt": "Read prompts/team-heartbeat.claude.md and execute the heartbeat automation for this project.",
+      "prompt": "Read .team/prompts/team-heartbeat.claude.md and execute the heartbeat automation for this project.",
       "createdAt": 1779084878196,
       "lastFiredAt": 1779194700798,
       "recurring": true,
@@ -25,7 +25,7 @@
     {
       "id": "e4819f82",
       "cron": "0 22 * * *",
-      "prompt": "Read prompts/team-retro.claude.md and execute the retro automation for this project.",
+      "prompt": "Read .team/prompts/team-retro.claude.md and execute the retro automation for this project.",
       "createdAt": 1779084878211,
       "lastFiredAt": 1779114600294,
       "recurring": true,
