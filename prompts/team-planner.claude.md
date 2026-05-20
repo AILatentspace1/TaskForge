@@ -135,6 +135,15 @@ For each candidate, produce:
 - `next_action`
 - `blocked_by` if needed
 
+## STEP 3.5  Dependency analysis
+
+For each non-duplicate candidate, determine if it depends on existing board tasks:
+
+1. Check if the candidate's `key_files` overlap with an existing task's `key_files`. If yes, the candidate depends on that task being merged first.
+2. Check if the candidate logically requires output from another task (e.g., a schema extension task must complete before a prompt update that consumes that schema).
+3. If a dependency is found, set `blocked_by` to the blocking task's `id`.
+4. Sort candidates for promotion in topological order: promote tasks with no unmet dependencies first.
+
 ## STEP 4  Deduplicate
 
 1. Compute a stable lowercase normalized fingerprint from:
