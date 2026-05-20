@@ -139,6 +139,28 @@ Write `.team/daily/<YYYY-MM-DD>.md`:
 
 ## Ignored low-priority signals
 - board.stats.ignored_low_priority_signals: <number>
+
+## Efficiency metrics
+
+Automated efficiency metrics for continuous improvement. Track team velocity and automation effectiveness.
+
+Compute and display the following 4 core metrics from `board.stats` and task state:
+
+1. **任务完成率** = merged+closed tasks / total tasks (excluding inbox)
+2. **平均 PR 合并时间** = avg(pr-open → merged hours) for recently merged tasks
+3. **Heartbeat 空闲率** = IDLE heartbeats / total heartbeats (from log entries with action=IDLE or no task advanced)
+4. **Planner 候选利用率** = total_tasks_promoted / total_candidates_seen
+
+Format as a summary table:
+
+| 指标 | 值 | 趋势 |
+|------|------|------|
+| 任务完成率 | <n>% | -- |
+| 平均 PR 合并时间 | <n>h | -- |
+| Heartbeat 空闲率 | <n>% | -- |
+| Planner 候选利用率 | <n>% | -- |
+
+Trend is derived by comparing today's values against yesterday's daily report if available. Mark up/down/stable with arrow indicators.
 ```
 
 ## STEP 8  Wrap up
