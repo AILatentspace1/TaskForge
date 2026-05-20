@@ -121,6 +121,17 @@ Reject candidates that:
 - Need multiple PRs unless split into a smaller slice.
 - Duplicate an active, archived, or prior candidate fingerprint.
 
+### Triage quick actions (Linear-inspired)
+
+For each candidate, classify its triage disposition before promotion:
+
+1. **duplicate**: If the candidate's fingerprint or normalized title (case-insensitive, 10+ char substring) matches an existing board task, archived task, or prior candidate, mark as `duplicate`. Do not promote. Record `{"action":"triage-duplicate", "fingerprint":"...", "matches":["<id>",...], "platform":"claude"}` in candidates.jsonl.
+2. **decline**: If the candidate is out of scope, unverifiable, or requires paid services, mark as `decline`. Do not promote. Record with `reason: "declined:<cause>"`.
+3. **snooze**: If the candidate is valid but board is at capacity, mark as `snooze`. Append to candidates.jsonl with `"promoted":false, "reason":"board-cap"`.
+4. **promote**: Valid, non-duplicate candidate ready for promotion.
+
+In STEP 6 wrap-up, output triage summary: `triage: promoted=<n> duplicate=<n> declined=<n> snoozed=<n>`.
+
 For each candidate, produce:
 - `title`
 - `skill`
