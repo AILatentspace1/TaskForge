@@ -115,7 +115,24 @@
     "gstack_artifacts": { "type": "object" },
     "next_action": { "type": "string" },
     "created_by_platform": { "type": "string", "enum": ["codex", "claude"] },
-    "last_platform": { "type": "string", "enum": ["codex", "claude"] }
+    "last_platform": { "type": "string", "enum": ["codex", "claude"] },
+    "state_history": {
+      "type": "array",
+      "description": "审计追踪：记录任务每次状态变更的时间、来源和原因",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "at", "platform"],
+        "properties": {
+          "from": { "type": "string", "description": "变更前状态" },
+          "to": { "type": "string", "description": "变更后状态" },
+          "at": { "type": "string", "format": "date-time", "description": "变更时间 ISO 8601" },
+          "platform": { "type": "string", "enum": ["claude", "codex", "human"], "description": "执行平台" },
+          "reason": { "type": "string", "description": "变更原因" },
+          "pr_url": { "type": "string", "description": "关联的 PR URL（如适用）" }
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "additionalProperties": true,
   "not": {
