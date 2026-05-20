@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://taskforge.local/schemas/initiative.schema.json",
+  "title": "TaskForge Initiative",
+  "description": "Initiative 是 goal 和 task 之间的组织层，将相关任务分组为一个可追踪的工作流。",
+  "type": "object",
+  "required": ["id", "title", "goal_id", "state", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Initiative 唯一标识符",
+      "pattern": "^I-\\d{4}$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Initiative 标题",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "goal_id": {
+      "type": "string",
+      "description": "所属 goal 的 ID"
+    },
+    "description": {
+      "type": "string",
+      "description": "Initiative 描述和范围说明"
+    },
+    "state": {
+      "type": "string",
+      "description": "Initiative 状态",
+      "enum": ["planned", "active", "completed", "cancelled"]
+    },
+    "task_ids": {
+      "type": "array",
+      "description": "关联的任务 ID 列表",
+      "items": { "type": "string" }
+    },
+    "success_criteria": {
+      "type": "array",
+      "description": "Initiative 完成标准",
+      "items": { "type": "string" }
+    },
+    "created_at": {
+      "type": "string",
+      "description": "创建时间 ISO 8601"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "更新时间 ISO 8601"
+    },
+    "completed_at": {
+      "type": ["string", "null"],
+      "description": "完成时间 ISO 8601"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "扩展元数据",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
