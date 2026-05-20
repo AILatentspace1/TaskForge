@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "automations": [
+    {
+      "id": "team-planner",
+      "name": "Planner",
+      "schedule": "5 */6 * * *",
+      "platform": "claude",
+      "enabled": true,
+      "prompt_ref": "prompts/team-planner.claude.md",
+      "timeout_minutes": 10,
+      "max_files_modified": 5,
+      "max_commits": 0,
+      "max_draft_prs": 0,
+      "conditions": {
+        "max_active_tasks": 10,
+        "require_on_base_branch": true
+      },
+      "retry": {
+        "max_attempts": 2,
+        "backoff_minutes": 30
+      }
+    },
+    {
+      "id": "team-heartbeat",
+      "name": "Heartbeat",
+      "schedule": "15 */2 * * *",
+      "platform": "claude",
+      "enabled": true,
+      "prompt_ref": "prompts/team-heartbeat.claude.md",
+      "timeout_minutes": 25,
+      "max_files_modified": 20,
+      "max_commits": 5,
+      "max_draft_prs": 1,
+      "conditions": {
+        "require_clean_working_tree": false,
+        "require_on_base_branch": true
+      },
+      "retry": {
+        "max_attempts": 2,
+        "backoff_minutes": 15
+      }
+    },
+    {
+      "id": "team-retro",
+      "name": "Retro",
+      "schedule": "0 22 * * *",
+      "platform": "claude",
+      "enabled": true,
+      "prompt_ref": "prompts/team-retro.claude.md",
+      "timeout_minutes": 15,
+      "max_files_modified": 10,
+      "max_commits": 3,
+      "max_draft_prs": 1,
+      "conditions": {
+        "require_on_base_branch": true
+      },
+      "retry": {
+        "max_attempts": 1,
+        "backoff_minutes": 60
+      }
+    }
+  ]
+}
