@@ -40,6 +40,33 @@ source AI project and task management frameworks. See:
 - `docs/research/open-source-ai-project-management-frameworks.md`
 - `docs/framework-integration-roadmap.md`
 
+## AI Block Schema
+
+TaskForge includes `schemas/ai-blocks.schema.json` to describe a reusable AI
+operation as data. An AI Block is a declarative contract for a future executor:
+it says what the operation does, what input it expects, what structured output
+it must produce, when it should run, and how failures should be handled.
+
+The schema is useful for making AI behavior composable instead of hardcoding it
+inside one prompt or script. For example:
+
+- `categorize` can classify a new task and return a `skill`
+- `extract` can turn research notes into candidate tasks
+- `summarize` can build a daily progress summary for retro
+
+See `examples/ai-blocks.example.json` for concrete examples.
+
+Typical usage:
+
+1. Define a block JSON document that matches `schemas/ai-blocks.schema.json`.
+2. Put the expected request shape in `input.schema` and the response contract in
+   `output.schema`.
+3. Add optional `trigger`, `error_handling`, and `config` so an executor knows
+   when to run the block and how to recover safely.
+4. Have a future planner/heartbeat/retro integration load the block, validate
+   input, call an AI model, validate output, and then apply the result to
+   TaskForge state.
+
 ## Applying TaskForge To A Project
 
 TaskForge is installed once as a reusable system repository, then each target

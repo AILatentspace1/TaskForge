@@ -1,0 +1,168 @@
+[
+  {
+    "id": "auto-categorize",
+    "type": "categorize",
+    "name": "自动分类任务",
+    "description": "基于任务标题和描述自动分配 skill 类型（research/engineering/planning/documentation）",
+    "input": {
+      "schema": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "key_files": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "examples": [
+        { "title": "调研 Linear 的任务拆分模式", "description": "分析 Linear AI 的自动化策略" },
+        { "title": "修复 board.json 解析错误", "key_files": ["schemas/board.schema.json"] }
+      ]
+    },
+    "output": {
+      "schema": {
+        "type": "object",
+        "required": ["skill"],
+        "properties": {
+          "skill": { "type": "string", "enum": ["research", "engineering", "planning", "documentation"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      },
+      "examples": [
+        { "skill": "research", "confidence": 0.92 },
+        { "skill": "engineering", "confidence": 0.85 }
+      ]
+    },
+    "trigger": {
+      "event": "on_task_created"
+    },
+    "error_handling": {
+      "max_retries": 1,
+      "on_failure": "skip"
+    },
+    "config": {
+      "temperature": 0.1,
+      "timeout_seconds": 30
+    },
+    "metadata": {
+      "version": "1.0.0",
+      "tags": ["planner", "automation"],
+      "source_research": "docs/research/monday-clickup-ai.md"
+    }
+  },
+  {
+    "id": "extract-action-items",
+    "type": "extract",
+    "name": "从调研文档提取行动项",
+    "description": "从调研文档中提取可执行的行动项和建议，转化为 TaskForge 候选任务",
+    "input": {
+      "schema": {
+        "type": "object",
+        "required": ["document_path"],
+        "properties": {
+          "document_path": { "type": "string" },
+          "context": { "type": "string" }
+        }
+      },
+      "examples": [
+        { "document_path": "docs/research/linear-github-projects.md", "context": "提取 TaskForge 可借鉴的模式" }
+      ]
+    },
+    "output": {
+      "schema": {
+        "type": "object",
+        "required": ["action_items"],
+        "properties": {
+          "action_items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "priority": { "type": "string" },
+                "source_section": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "action_items": [
+            { "title": "增加 initiatives 层", "priority": "P2", "source_section": "4.1" }
+          ]
+        }
+      ]
+    },
+    "trigger": {
+      "event": "on_task_created",
+      "condition": "task.skill == 'research'"
+    },
+    "error_handling": {
+      "max_retries": 2,
+      "on_failure": "notify"
+    },
+    "config": {
+      "temperature": 0.3,
+      "timeout_seconds": 60
+    },
+    "metadata": {
+      "version": "1.0.0",
+      "tags": ["planner", "extraction"],
+      "source_research": "docs/research/cross-framework-summary.md"
+    }
+  },
+  {
+    "id": "summarize-daily-progress",
+    "type": "summarize",
+    "name": "生成每日进展摘要",
+    "description": "综合 board 状态、git log 和日志生成每日进展摘要",
+    "input": {
+      "schema": {
+        "type": "object",
+        "required": ["date"],
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "board_path": { "type": "string" },
+          "log_path": { "type": "string" }
+        }
+      },
+      "examples": [
+        { "date": "2026-05-19", "board_path": ".team/board.json", "log_path": ".team/log/2026-05-19.jsonl" }
+      ]
+    },
+    "output": {
+      "schema": {
+        "type": "object",
+        "required": ["summary"],
+        "properties": {
+          "summary": { "type": "string" },
+          "tasks_completed": { "type": "integer" },
+          "prs_opened": { "type": "integer" },
+          "highlights": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "examples": [
+        { "summary": "完成 2 个调研任务，创建 3 个 PR", "tasks_completed": 2, "prs_opened": 3 }
+      ]
+    },
+    "trigger": {
+      "event": "on_schedule",
+      "schedule": "0 22 * * *"
+    },
+    "error_handling": {
+      "max_retries": 1,
+      "on_failure": "skip"
+    },
+    "config": {
+      "temperature": 0.5,
+      "timeout_seconds": 120
+    },
+    "metadata": {
+      "version": "1.0.0",
+      "tags": ["retro", "reporting"],
+      "source_research": "docs/research/notion-asana-ai.md"
+    }
+  }
+]
