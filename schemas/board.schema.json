@@ -8,6 +8,11 @@
     "version": { "type": "integer", "minimum": 1, "description": "Board schema version. v3 adds platform fields (created_by_platform, last_platform) and enhanced lock format." },
     "updated_at": { "type": "string" },
     "goals": { "type": "array", "items": { "type": "object" } },
+    "initiatives": {
+      "type": "array",
+      "description": "Goal 和 Task 之间的组织层，将相关任务分组为可追踪的工作流",
+      "items": { "$ref": "./initiative.schema.json" }
+    },
     "tasks": {
       "type": "array",
       "items": { "$ref": "./task.schema.json" }
