@@ -81,7 +81,7 @@
 
 **TaskForge 实现**:
 - **state_history 审计**（T-0020）: 每个 task 增加 state_history 数组，记录每次状态变更的 from/to/at/by/run_id，为 retro 和 audit 提供数据基础。
-- **风险扫描**（T-0010）: 借鉴 Notion AI，heartbeat STEP 3.5 扫描 stale_task（>48h）、blocked_chain、repeated_failure（≥3 attempts）三类风险。
+- **风险扫描**（T-0010）: 借鉴 Notion AI，heartbeat STEP 3.5 扫描 stale_task（>48h）、blocked_chain、repeated_failure（≥3 attempts）三类 risk 信号。
 
 ### 2.6 人机协作
 
