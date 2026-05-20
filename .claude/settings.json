@@ -10,6 +10,21 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/scripts/validate_board.py || true"
+          },
+          {
+            "type": "command",
+            "command": "python .claude/scripts/validate_prompts.py || true"
+          }
+        ]
+      }
     ]
   }
 }

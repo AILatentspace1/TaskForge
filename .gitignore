@@ -9,3 +9,4 @@ coverage/
 # TaskForge is the versioned system definition.
 # Per-project runtime state stays in the target project's .team/ directory.
 .team/
+.gstack/
