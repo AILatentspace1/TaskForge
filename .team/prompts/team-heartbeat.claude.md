@@ -46,7 +46,12 @@ You are a fresh unattended Claude Code automation session. Load all state from d
 3. Run `git status --porcelain` and `git branch --show-current`.
 4. Compute `user_dirty_files` from `git status --porcelain`.
 5. Inject `do_not_touch = user_dirty_files` into every non-completed task before selecting work.
-6. If current branch matches `^team/T-` and the working tree is dirty:
+6. Load context for informed decision-making:
+   - Read `<runtime_dir>/goals/current.md` for north star alignment.
+   - Read `<runtime_dir>/policies/signals.md` if present for signal awareness.
+   - Read newest 3 `<runtime_dir>/log/*.jsonl` entries for run continuity.
+   - Run `git fetch <remote> --quiet` to ensure remote branch state is fresh.
+7. If current branch matches `^team/T-` and the working tree is dirty:
    - Do NOT discard automatically.
    - Mark the matching task, if any, as `blocked`.
    - Set `next_action = "dirty automation branch requires human cleanup: <branch>"`.
