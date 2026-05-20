@@ -46,7 +46,12 @@ You are a fresh unattended Claude Code automation session. Load all state from d
 3. Run `git status --porcelain` and `git branch --show-current`.
 4. Compute `user_dirty_files` from `git status --porcelain`.
 5. Inject `do_not_touch = user_dirty_files` into every non-completed task before selecting work.
-6. If current branch matches `^team/T-` and the working tree is dirty:
+6. Load context for informed decision-making:
+   - Read `<runtime_dir>/goals/current.md` for north star alignment.
+   - Read `<runtime_dir>/policies/signals.md` if present for signal awareness.
+   - Read newest 3 `<runtime_dir>/log/*.jsonl` entries for run continuity.
+   - Run `git fetch <remote> --quiet` to ensure remote branch state is fresh.
+7. If current branch matches `^team/T-` and the working tree is dirty:
    - Do NOT discard automatically.
    - Mark the matching task, if any, as `blocked`.
    - Set `next_action = "dirty automation branch requires human cleanup: <branch>"`.
@@ -245,22 +250,6 @@ For each item in `task.dod`:
 - `scratch-contains`: read `<runtime_dir>/scratch/<task_id>/<file>`, regex match `pattern` against first line or full file as appropriate.
 
 Set `task.dod_results[<id>]` to `pass`, `fail`, or `pending`. Compute `pct = passed / total`.
-
-### Guardrail retry loop
-
-After `verify_dod`, if `pct < 100%`:
-
-1. Collect all failed DoD items and their error output into a `guardrail_feedback` object: `{"failed_checks": [{"id": "<id>", "error": "<output>"}], "attempt": <n>}`.
-2. Set `next_action` to describe the failures and required fixes.
-3. If `guardrail_feedback.attempt < 2`:
-   - Attempt to fix only the failed items inline.
-   - Re-run `verify_dod` on failed items only.
-   - Increment `guardrail_feedback.attempt`.
-4. If `guardrail_feedback.attempt >= 2` and failures persist:
-   - Record `task.guardrail_attempts = guardrail_feedback.attempt`.
-   - Log: `{"action": "guardrail_exhausted", "task_id": "<id>", "attempts": <n>, "failed": ["<id>", ...], "platform": "claude"}`.
-   - Continue with current pct — do not block task advancement.
-5. If all items pass after retry, set `pct = 100%` and clear `guardrail_feedback`.
 
 ## STEP 4.5  Harvest action items (on research task merge)
 
